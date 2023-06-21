@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'xyz.jpenilla.run-velocity' version '2.1.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group 'top.ynfmc.ondemand'
+version '0.0.0'
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    compileOnly 'com.velocitypowered:velocity-api:3.1.1'
+    annotationProcessor 'com.velocitypowered:velocity-api:3.1.1'
+
+    // TOML config
+    implementation 'com.moandjiezana.toml:toml4j:0.7.2'
+
+    // Tencent Cloud SDK
+    implementation 'com.tencentcloudapi:tencentcloud-sdk-java:3.1.783'
+}
+
+tasks {
+    runVelocity {
+        velocityVersion('3.1.1')
+    }
+}
