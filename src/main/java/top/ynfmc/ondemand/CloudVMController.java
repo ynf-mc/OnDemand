@@ -71,7 +71,9 @@ public class CloudVMController {
 
                         // Warn players that the server will be stopped.
                         ComponentLike message = Component.text()
-                                .append(Component.text("The server will be stopped in "))
+                                .append(Component.text("The server "))
+                                .append(Component.text(this.serverName))
+                                .append(Component.text(" will be stopped in "))
                                 .append(Component.text(this.hibernationTime.toSeconds()))
                                 .append(Component.text(" seconds."))
                                 .build();
@@ -80,6 +82,7 @@ public class CloudVMController {
                         Thread.sleep(this.hibernationTime.toMillis());
                         if (getServer().get().getPlayersConnected().size() == 0) {
                             try {
+                                OnDemand.broadcast(Component.text("Stopping server " + this.serverName));
                                 this.cloudVM.stopServer();
                             } catch (Exception e) {
                                 OnDemand.logger.error("Failed to stop server: ", e);

@@ -33,7 +33,7 @@ public class OnDemandCommand {
                                 }))).then(LiteralArgumentBuilder.<CommandSource>literal("list").executes(ctx -> {
                     ctx.getSource().sendMessage(Component.text("Servers:"));
                     for (String serverName : OnDemand.controllers.keySet()) {
-                        ctx.getSource().sendMessage(Component.text(serverName));
+                        ctx.getSource().sendMessage(Component.text("-> " + serverName));
                     }
                     return 0;
                 })).build());
