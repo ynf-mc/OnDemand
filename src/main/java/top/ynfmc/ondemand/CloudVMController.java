@@ -96,7 +96,12 @@ public class CloudVMController {
     }
 
     public int stopServer() {
-        if (this.pollingThread != null) { this.pollingThread.interrupt(); } else { return 1; }
+        if (this.pollingThread != null) {
+            this.pollingThread.interrupt();
+            this.pollingThread = null;
+        } else {
+            return 1;
+        }
         try {
             this.cloudVM.stopServer();
         } catch (Exception e) {
