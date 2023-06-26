@@ -4,15 +4,18 @@ import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.ComponentLike;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 @Plugin(
         id = "ondemand",
@@ -39,11 +42,25 @@ public class OnDemand {
         server.getCommandManager().register(OnDemandCommand.build());
 
         // Read from config file and initialize controllers.
-        Path configFilePath = configPath.resolve("config.yml");
-        Toml config = new Toml().read(configFilePath.toFile());
-        controllers = ConfigReader.fromConfig(config);
+        try {
+            Path configFilePath = configPath.resolve("config.toml");
+            Toml config = new Toml().read(configFilePath.toFile());
+            controllers = ConfigReader.fromConfig(config);
+        } catch (Exception e) {
+            logger.error("Config file not found or corrupted: ", e);
+            server.shutdown();
+        }
+
 
         logger.info("OnDemand loaded.");
+    }
+
+    @Subscribe
+    public void onProxyShutdown(ProxyShutdownEvent event) {
+        // Stop all servers.
+        for (CloudVMController controller : controllers.values()) {
+            controller.stopServer();
+        }
     }
 
     // Broadcast a message to all players and the console.
@@ -76,5 +93,9 @@ public class OnDemand {
             return 2;
         }
         return controller.stopServer();
+    }
+
+    public static Optional<RegisteredServer> getServerFromName(String name) {
+        return OnDemand.server.getServer(name);
     }
 }

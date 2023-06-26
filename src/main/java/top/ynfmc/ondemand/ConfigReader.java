@@ -5,30 +5,29 @@ import top.ynfmc.ondemand.backend.ICloudVM;
 import top.ynfmc.ondemand.backend.TencentCVM;
 
 import java.time.Duration;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ConfigReader {
     public static class GeneralConfig {
-        public String serverName;
         public int port;
         public int hibernationTime;
 
-        public CloudVMController toController() {
+        public CloudVMController toController(String serverName) {
             return null;
         }
     }
 
+    // TODO: Refactor into each cloud VM's implementation.
     public static class TencentCVMConfig extends GeneralConfig {
         public String secretId;
         public String secretKey;
         public String region;
         public String instanceId;
 
-        public CloudVMController toController() {
+        public CloudVMController toController(String serverName) {
             ICloudVM cvm = new TencentCVM(this.secretId, this.secretKey, this.region, this.instanceId);
-            return new CloudVMController(cvm, this.serverName, this.port, Duration.ofMinutes(this.hibernationTime));
+            return new CloudVMController(cvm, serverName, this.port, Duration.ofMinutes(this.hibernationTime));
         }
     }
 
@@ -40,7 +39,7 @@ public class ConfigReader {
             String type = serverConfig.getString("type");
             if (type.equals("tencent-cvm")) {
                 TencentCVMConfig config = serverConfig.to(TencentCVMConfig.class);
-                CloudVMController controller = config.toController();
+                CloudVMController controller = config.toController(serverName);
                 controllers.put(serverName, controller);
             }
             // TODO: add more types

@@ -1,5 +1,6 @@
 package top.ynfmc.ondemand;
 
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -8,6 +9,7 @@ import top.ynfmc.ondemand.backend.ICloudVM;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.Optional;
 
 public class CloudVMController {
     private final ICloudVM cloudVM;
@@ -15,6 +17,7 @@ public class CloudVMController {
     private String ip;
     private final int port;
     private final Duration hibernationTime;
+    // Polling server status. Also indicates whether the server is running by its presence.
     private Thread pollingThread;
 
 
@@ -27,6 +30,8 @@ public class CloudVMController {
     }
 
     public int runServer() {
+        if (this.pollingThread != null) { return 2; }
+
         try {
             this.ip = this.cloudVM.runServer();
         } catch (Exception e) {
@@ -61,7 +66,7 @@ public class CloudVMController {
             while (true) {
                 try {
                     Thread.sleep(1000);
-                    if (OnDemand.server.getServer(this.serverName).get().getPlayersConnected().size() == 0) {
+                    if (getServer().get().getPlayersConnected().size() == 0) {
 
                         // Warn players that the server will be stopped.
                         ComponentLike message = Component.text()
@@ -72,7 +77,7 @@ public class CloudVMController {
                         OnDemand.broadcast(message);
 
                         Thread.sleep(this.hibernationTime.toMillis());
-                        if (OnDemand.server.getServer(this.serverName).get().getPlayersConnected().size() == 0) {
+                        if (getServer().get().getPlayersConnected().size() == 0) {
                             try {
                                 this.cloudVM.stopServer();
                             } catch (Exception e) {
@@ -91,13 +96,24 @@ public class CloudVMController {
     }
 
     public int stopServer() {
-        this.pollingThread.interrupt();
+        if (this.pollingThread != null) { this.pollingThread.interrupt(); } else { return 1; }
         try {
             this.cloudVM.stopServer();
         } catch (Exception e) {
             OnDemand.logger.error("Failed to stop server: ", e);
             return 1;
         }
+        Optional<RegisteredServer> server = getServer();
+        if (server.isEmpty()) {
+            OnDemand.logger.error("Failed to stop server: server not found.");
+            return 1;
+        }
+        OnDemand.server.unregisterServer(server.get().getServerInfo());
+
         return 0;
+    }
+
+    private Optional<RegisteredServer> getServer() {
+        return OnDemand.getServerFromName(this.serverName);
     }
 }
