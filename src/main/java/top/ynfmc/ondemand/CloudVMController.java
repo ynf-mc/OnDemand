@@ -56,6 +56,7 @@ public class CloudVMController {
         // Start a new thread polling the server status.
         // If the player count is 0 for more than $hibernationTime, stop the server.
         this.pollingThread = new Thread(getPollServerStatusFunc());
+        this.pollingThread.start();
 
         return 0;
     }
@@ -89,7 +90,6 @@ public class CloudVMController {
                     }
                 } catch (Exception e) {
                     OnDemand.logger.error("Failed to poll server status: ", e);
-                    break;
                 }
             }
         };
